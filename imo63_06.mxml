@@ -1,0 +1,99 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- forked from _ex_'s IMO 1960 Problem 01 -->
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute"
+                width="480" height="230" backgroundColor="#FFFFFF" xmlns="*">
+
+    <mx:ApplicationControlBar dock="true" width="100%">
+        <mx:Label id="lblProblem" x="10" y="10" width="380" height="160">
+            <mx:htmlText>
+            <![CDATA[  <b>IMO 1963 Problem 06</b>
+  Five students, A,B,C,D,E, took part in a contest. One prediction
+  was that the contestants would finish in the order ABCDE. This
+  prediction was very poor. In fact no contestant finished in the
+  position predicted, and no two contestants predicted to finish
+  consecutively actually did so. A second prediction had the
+  contestants finishing in the order DAECB. This prediction was
+  better. Exactly two of the contestants finished in the places
+  predicted, and two disjoint pairs of students predicted to finish
+  consecutively actually did so. Determine the order in which the
+  contestants finished.
+            ]]>
+            </mx:htmlText>
+        </mx:Label>
+        <mx:Button id="btnSolve" x="395" y="115" click="solve();" label="Solve!" />
+    </mx:ApplicationControlBar>
+    <mx:Script>
+        <![CDATA[
+            private var students:String = "ABCDE";
+            private var guess1:String = "ABCDE";
+            private var guess2:String = "DAECB";
+
+            public function solve():void {
+                txtResult.text = "";
+
+                // Create array of permutations of students.
+                var p:Array = permutations(students.split(""));
+
+                // Check every possibility.
+                for (var k:int = 0; k < p.length; ++k) {
+                    var s1:int = singleCorrectPredictions(p[k], guess1.split(""))
+                    var d1:int = doubleConsecutivePredictions(p[k], guess1.split(""))
+                    var s2:int = singleCorrectPredictions(p[k], guess2.split(""))
+                    var d2:int = doubleConsecutivePredictions(p[k], guess2.split(""))
+                    if (s1 == 0 && d1 == 0 && s2 == 2 && d2 == 2) {
+                        // Conditions satisfied, print solution!
+                        txtResult.text += p[k] + "\n";
+                    }
+                }
+            }
+
+            private function singleCorrectPredictions(master:Array, guess:Array):int {
+                var rt:int = 0;
+                for (var k:int = 0; k < guess.length; ++k) {
+                    rt += (guess[k] == master[k])? 1 : 0;
+                }
+                return rt;
+            }
+
+            private function doubleConsecutivePredictions(master:Array, guess:Array):int {
+                var rt:int = 0;
+                for (var i:int = 0; i < guess.length - 1; ++i) {
+                    for (var j:int = 0; j < master.length - 1; ++j) {
+                        if (guess[i] == master[j] && guess[i + 1] == master[j + 1]) {
+                            ++rt;
+                            break;  // breaking here because elements are different.
+                        }
+                    }
+                }
+                return rt;
+            }
+
+            private function permutations(array:Array):Array {
+                var n:int = array.length;
+                var rt:Array = new Array();
+                if (n < 2) {
+                    rt.push(array);
+                }
+                else {
+                    for (var i:int = 0; i < n; ++i) {
+                        // Create a new array from [array] where the
+                        // [i]-th term has been ignored.
+                        var filterFunc:Function = function(element:*, index:int, arr:Array):Boolean {
+                            // AS3 filter ignores the elements that return false.
+                            return element != array[i];
+                        };
+                        var t:Array = array.filter(filterFunc);
+                        var tz:Array = permutations(t);
+                        for (var j:int = 0; j < tz.length; ++j) {
+                            tz[j].unshift(array[i])
+                            rt.push(tz[j]);
+                        }
+                    }
+                }
+                return rt;
+            }
+        ]]>
+    </mx:Script>
+    <mx:TextArea id="txtResult" x="5" y="10" width="470" height="45" />
+
+</mx:Application>

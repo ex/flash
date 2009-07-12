@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute"
+                width="480" height="200" backgroundColor="#FFFFFF" xmlns="*">
+
+    <mx:ApplicationControlBar dock="true" width="100%">
+        <mx:Label id="lblProblem" x="10" y="10" width="380" height="80">
+            <mx:htmlText>
+            <![CDATA[  <b>IMO 1960 Problem 01</b>
+
+  Determine all three-digit numbers N having the property
+  that N is divisible by 11, and N/11 is equal to the sum of
+  the squares of the digits of N.
+            ]]>
+            </mx:htmlText>
+        </mx:Label>
+        <mx:Button id="btnSolve" x="395" y="55" click="solve();" label="Solve!" />
+    </mx:ApplicationControlBar>
+    <mx:Script>
+        <![CDATA[
+            public function solve():void {
+                txtResult.text = "";
+                var count:int = 1;
+
+                var k:int = 10;
+                while (k * 11 < 1000) {
+                    // Calculate sum of the squares of the digits
+                    var sumSquares:int = 0;
+                    var n:int = k * 11;
+                    while (n > 0) {
+                        var digit:int = n % 10;
+                        sumSquares += digit * digit;
+                        n /= 10;
+                    }
+
+                    // Check
+                    if (sumSquares == k) {
+                        txtResult.text += count + ") " + (k * 11) + "\n";
+                        ++count;
+                    }
+                    ++k;
+                }
+            }
+        ]]>
+    </mx:Script>
+    <mx:TextArea id="txtResult" x="5" y="15" width="470" height="90" />
+
+</mx:Application>

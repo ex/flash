@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- forked from _ex_'s IMO 1960 Problem 01 -->
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute"
+                width="480" height="200" backgroundColor="#FFFFFF" xmlns="*">
+
+    <mx:ApplicationControlBar dock="true" width="100%">
+        <mx:Label id="lblProblem" x="10" y="10" width="380" height="130">
+            <mx:htmlText>
+            <![CDATA[  <b>IMO 1962 Problem 01</b>
+  Find the smallest natural number n which has the following
+  properties:
+
+  (a) Its decimal representation has 6 as the last digit.
+  (b) If the last digit 6 is erased and placed in front of
+      the remaining digits, the resulting number is four
+      times as large as the original number n.
+            ]]>
+            </mx:htmlText>
+        </mx:Label>
+        <mx:Button id="btnSolve" x="395" y="115" click="solve();" label="Solve!" />
+    </mx:ApplicationControlBar>
+    <mx:Script>
+        <![CDATA[
+            public function solve():void {
+                txtResult.text = "";
+
+                var k:int = 1;
+                var k_up:int = 10;    // Minimum (10^p) greater that k.
+                while (true) {
+                    var n:int = (10 * k) + 6;
+                    var m:int = (6 * k_up) + k;
+
+                    // Check
+                    if (m == 4 * n) {
+                        txtResult.text += "ANSWER: " + n;
+                        break;
+                    }
+                    ++k;
+                    if (k >= k_up) {
+                        k_up *= 10;
+                    }
+                }
+            }
+        ]]>
+    </mx:Script>
+    <mx:TextArea id="txtResult" x="5" y="15" width="470" height="40" />
+
+</mx:Application>

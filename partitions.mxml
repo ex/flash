@@ -1,0 +1,163 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute"
+                width="640" height="340" backgroundColor="#FFFFFF" xmlns="*">
+
+    <mx:ApplicationControlBar dock="true" width="100%">
+        <mx:Label x="10" y="10" text="Draw partitions of:"/>
+        <mx:NumericStepper id="cntNumber" x="100" y="10" value="6"
+                           change="canvas.n = cntNumber.value; canvas.draw();"/>
+    </mx:ApplicationControlBar>
+
+    <mx:Canvas width="100%" height="100%" x="0" y="0" backgroundColor="#FFFFFF">
+        <PartitionCanvas id="canvas"/>
+    </mx:Canvas>
+
+    <mx:Component className="PartitionCanvas">
+        <mx:UIComponent creationComplete="draw()">
+            <mx:Script>
+                <![CDATA[
+
+        import flash.display.Sprite;
+        import flash.text.TextField;
+        import flash.text.TextFormat;
+
+        public var n:int = 6;
+
+        private var count:int = 0;
+
+        public function draw():void {
+            // Reset state.
+            removeChildren(this);
+            count = 0;
+
+            // Draw all the integer partitions of [n].
+            f(new Array(), n);
+        }
+
+        private function f(pa:Array, m:int):void {
+            // Determine value of [z]
+            // ----------------------
+            // Because the array [pa] represents a partition in ascending order
+            // the maximum term of [pa] would be the last array element.
+            // In case the array is empty, [z] would be 1.
+            var z:int = (pa.length > 0)? pa[pa.length - 1] : 1;
+
+            // Recursive process
+            // -----------------
+            for (var k:int = z; k <= m; ++k) {
+                // Create new temporal array [pt] adding [k] as last element to [pa].
+                // In AS3 we first need to create a copy of array [pa].
+                var pt:Array = pa.concat();
+                pt.push(k);
+
+                if (m == k) {
+                    // If (m - k) == 0, print partition [pt],
+                    addChild(getNode(25 + (28 * count), 30, 12, String(count + 1),
+                             0xFFFFFF, 0xCCBB00, 0x887700));
+                    addChild(getStrip(25 + (28 * count), 60, 28, 11, pt,
+                             warmColor(), 0x998800));
+                    ++count;
+                }
+                else {
+                    // in other case continue recursion.
+                    f(pt, m - k);
+                }
+            }
+        }
+
+        public function removeChildren(holder:DisplayObjectContainer):void {
+            while (holder.numChildren > 0) {
+                holder.removeChildAt(0);
+            }
+        }
+
+        // Return a "warm" color.
+        private function warmColor():Number {
+            var b:int = 192 + (16 * Math.random());
+            var r:int = 240 + (16 * Math.random());
+            var g:int = 224 + (16 * Math.random());
+            return (r << 16 | g << 8 | b);
+        }
+
+        // Return a "strip", that is a list of nodes joined by a line.
+        private function getStrip(x:int,
+                                  y:int,
+                                  offset:int,
+                                  radius:Number,
+                                  list:Array,
+                                  colorBody:Number,
+                                  colorBorder:Number,
+                                  vertical:Boolean = true,
+                                  colorText:Number = 0,
+                                  borderSize:Number = 0.5,
+                                  font:String = "Verdana"):Sprite {
+
+            var strip:Sprite = new Sprite();
+
+            strip.graphics.lineStyle(3 * borderSize, colorBorder);
+            strip.graphics.beginFill(colorBody);
+            strip.graphics.moveTo(x, y);
+            if (vertical) {
+                strip.graphics.lineTo(x, y + (offset * (list.length - 1)));
+            }
+            else {
+                strip.graphics.lineTo(x + (offset * (list.length - 1)), y);
+            }
+            strip.graphics.endFill();
+
+            var node:Sprite;
+            for (var k:int = 0; k < list.length; ++k) {
+                if (vertical) {
+                    node = getNode(x, y + (offset * k), radius,
+                                   list[k], colorBody, colorBorder,
+                                   colorText, borderSize, font);
+                }
+                else {
+                    node = getNode(x + (offset * k), y, radius,
+                                   list[k], colorBody, colorBorder,
+                                   colorText, borderSize, font);
+                }
+                strip.addChild(node);
+            }
+            return strip;
+        }
+
+        // Return a "node", that is a circle with a label.
+        private function getNode(x:int,
+                                 y:int,
+                                 radius:Number,
+                                 caption:String,
+                                 colorBody:Number,
+                                 colorBorder:Number,
+                                 colorText:Number = 0,
+                                 borderSize:Number = 0.5,
+                                 font:String = "Verdana"):Sprite {
+            var format:TextFormat = new TextFormat();
+            format.font = font;
+            format.color = colorText;
+            format.size = 12;
+            format.bold = true;
+
+            var label:TextField = new TextField();
+            label.selectable = false;
+            label.defaultTextFormat = format;
+            label.text = caption;
+            label.x = -2*label.textWidth/3;     // need to fix this ad-hoc solution
+            label.y = -2*label.textHeight/3;    // for centering text.
+
+            var node:Sprite = new Sprite();
+            node.graphics.lineStyle(borderSize, colorBorder);
+            node.graphics.beginFill(colorBody);
+            node.graphics.drawCircle(0, 0, radius);
+            node.graphics.endFill();
+            node.addChild(label);
+            node.x = x;
+            node.y = y;
+            return node;
+        }
+                ]]>
+            </mx:Script>
+        </mx:UIComponent>
+    </mx:Component>
+</mx:Application>
+
