@@ -17,7 +17,7 @@ public class Main extends MovieClip {
 	
 	public function Main():void {
         // Ensure that we are fully loaded.
-		if (stage) {
+		if (stage != null) {
             init();
         } else {
             addEventListener(Event.ADDED_TO_STAGE, init);
