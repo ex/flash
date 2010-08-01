@@ -1,7 +1,7 @@
 ﻿/* ========================================================================== */
 /*   Board.as                                                                 */
 /*   Class used to draw and solve sliding puzzles of the type found at:       */
-/*   http://professorlaytonwalkthrough.blogspot.com/2008/02/puzzle097.html    */
+/*   http://en.wikipedia.org/wiki/Klotski                                     */
 /*   Copyright (c) 2010 Laurens Rodriguez Oscanoa.                            */
 /* -------------------------------------------------------------------------- */
 /*   This code is licensed under the MIT license:                             */
@@ -19,7 +19,7 @@ import flash.filters.DropShadowFilter;
 import flash.geom.Point;
 import flash.ui.Keyboard;
 import flash.utils.getTimer;
-	
+
 public class Board {
 
     private static const BORDER_SIZE:int = 4;
@@ -40,46 +40,50 @@ public class Board {
     private var mOldMouseX:int;
     private var mOldMouseY:int;
     private var mIsDragging:Boolean;
+    private var mInitialLayout:Array;
+    private var mBoardCanvas:MovieClip;
 
-	public function Board(parentCanvas:MovieClip, board:Array):void {
+	public function Board(parentCanvas:MovieClip, initialBoardLayout:Array):void {
+        mInitialLayout = initialBoardLayout;
+        mBoardCanvas = parentCanvas;
         // Set board size in cells.
-        mHeight = board.length;
-        mWidth = board[0].length;
+        mHeight =mInitialLayout.length;
+        mWidth = mInitialLayout[0].length;
 
         // Create and center board background.
         var width:int = Piece.SIZE * mWidth + 2 * BORDER_SIZE;
         var height:int = Piece.SIZE * mHeight + 2 * BORDER_SIZE;
         mBackground = Graphics.getRoundedRect(width, height, CORNER_SIZE, CORNER_SIZE,
                                               BACK_COLOR, BACK_BORDER_COLOR, BORDER_SIZE);
-        mBackground.x = (parentCanvas.stage.stageWidth - width) / 2;
-        mBackground.y = (parentCanvas.stage.stageHeight - height) / 2;
+        mBackground.x = (mBoardCanvas.stage.stageWidth - width) / 2;
+        mBackground.y = (mBoardCanvas.stage.stageHeight - height) / 2;
         mBackground.filters = new Array(new DropShadowFilter(0, 0, 0x000000, 1, 14, 14));
-        parentCanvas.addChild(mBackground);
+        mBoardCanvas.addChild(mBackground);
 
         // Create canvas to draw pieces.
         mCanvas = new Sprite();
         mShadowCanvas = new Sprite();
         mShadowCanvas.x = mCanvas.x = mBackground.x + BORDER_SIZE;
         mShadowCanvas.y = mCanvas.y = mBackground.y + BORDER_SIZE;
-        parentCanvas.addChild(mShadowCanvas);
-        parentCanvas.addChild(mCanvas);
+        mBoardCanvas.addChild(mShadowCanvas);
+        mBoardCanvas.addChild(mCanvas);
 
         // Create border.
         mBorder = Graphics.getRoundedRect(width, height, CORNER_SIZE, CORNER_SIZE,
                                           0, BACK_BORDER_COLOR, BORDER_SIZE, 0);
         mBorder.x = mBackground.x;
         mBorder.y = mBackground.y;
-        parentCanvas.addChild(mBorder);
+        mBoardCanvas.addChild(mBorder);
 
         // Create board buffer and mTiles.
         mTiles = new Array(mWidth * mHeight);
-        createPieces(board);
+        createPieces(mInitialLayout);
 
         // Register events for mouse click detection.
-        parentCanvas.stage.addEventListener(MouseEvent.MOUSE_DOWN, onMouseDown, false, 0, true);
-        parentCanvas.stage.addEventListener(MouseEvent.MOUSE_UP, onMouseUp, false, 0, true);
-        parentCanvas.stage.addEventListener(KeyboardEvent.KEY_DOWN, onKeyDown, false, 0, true);
-        parentCanvas.stage.addEventListener(Event.ENTER_FRAME, onEnterFrame, false, 0, true);
+        mBoardCanvas.stage.addEventListener(MouseEvent.MOUSE_DOWN, onMouseDown, false, 0, true);
+        mBoardCanvas.stage.addEventListener(MouseEvent.MOUSE_UP, onMouseUp, false, 0, true);
+        mBoardCanvas.stage.addEventListener(KeyboardEvent.KEY_DOWN, onKeyDown, false, 0, true);
+        mBoardCanvas.stage.addEventListener(Event.ENTER_FRAME, onEnterFrame, false, 0, true);
 
         mTimer = getTimer();
         mSelectedPiece = null;
@@ -89,7 +93,7 @@ public class Board {
     private function createPieces(board:Array):void {
         for (var y:int = 0; y < mHeight; ++y) {
             for (var x:int = 0; x < mWidth; ++x) {
-                if (!mTiles[x + y * mWidth] && board[y][x]) {
+                if (mTiles[x + y * mWidth] == null && board[y][x] != Piece.ID_EMPTY) {
                     var piece:Piece = new Piece(mCanvas, mShadowCanvas, board[y][x], x, y);
                     addPieceToBoard(piece);
                 }
@@ -116,10 +120,12 @@ public class Board {
     }
 
     private function getCellUnderMouse(mouseX:int, mouseY:int):Point {
-        var x:int = (mouseX - mCanvas.x) / Piece.SIZE;
-        var y:int = (mouseY - mCanvas.y) / Piece.SIZE;
-        if (x >= 0 && x < mWidth && y >= 0 && y < mHeight) {
-            return new Point(x, y);
+        if (mouseX > mCanvas.x && mouseY > mCanvas.y) {
+            var x:int = (mouseX - mCanvas.x) / Piece.SIZE;
+            var y:int = (mouseY - mCanvas.y) / Piece.SIZE;
+            if (x >= 0 && x < mWidth && y >= 0 && y < mHeight) {
+                return new Point(x, y);
+            }
         }
         return null;
     }
@@ -284,20 +290,20 @@ public class Board {
     }
 
     public function free():void {
+        mBoardCanvas.stage.removeEventListener(MouseEvent.MOUSE_DOWN, onMouseDown);
+        mBoardCanvas.stage.removeEventListener(MouseEvent.MOUSE_UP, onMouseUp);
+        mBoardCanvas.stage.removeEventListener(Event.ENTER_FRAME, onEnterFrame);
+
         mSelectedPiece = null;
-
-        mCanvas.stage.removeEventListener(MouseEvent.MOUSE_DOWN, onMouseDown);
-        mCanvas.stage.removeEventListener(MouseEvent.MOUSE_UP, onMouseUp);
-        mCanvas.stage.removeEventListener(Event.ENTER_FRAME, onEnterFrame);
-
-        mBackground.parent.removeChild(mBackground);
+        mBoardCanvas.removeChild(mBackground);
         mBackground = null;
-        mShadowCanvas.parent.removeChild(mShadowCanvas);
+        mBoardCanvas.removeChild(mShadowCanvas);
         mShadowCanvas = null;
-        mCanvas.parent.removeChild(mCanvas);
+        mBoardCanvas.removeChild(mCanvas);
         mCanvas = null;
-        mBorder.parent.removeChild(mBorder);
+        mBoardCanvas.removeChild(mBorder);
         mBorder = null;
+        mBoardCanvas = null;
     }
 }
 }
